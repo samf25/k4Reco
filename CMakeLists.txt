@@ -49,4 +49,4 @@ include(CTest)
 add_subdirectory(k4Reco)
 add_subdirectory(test)
 
-include(cmake/CreateProjectConfig.cmake)
+# include(cmake/CreateProjectConfig.cmake)
