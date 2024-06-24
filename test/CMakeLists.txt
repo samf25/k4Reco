@@ -1,5 +1,5 @@
 #[[
-Copyright (c) 2019-2024 Key4hep-Project.
+Copyright (c) 2020-2024 Key4hep-Project.
 
 This file is part of Key4hep.
 See https://key4hep.github.io/key4hep-doc/ for further info.
@@ -17,3 +17,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ]]
 
+
+find_package(k4geo REQUIRED)
