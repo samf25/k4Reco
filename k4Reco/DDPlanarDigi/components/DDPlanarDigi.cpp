@@ -23,18 +23,15 @@
 #include "edm4hep/TrackerHitPlaneCollection.h"
 
 #include "Gaudi/Accumulators/RootHistogram.h"
-#include "Gaudi/Histograming/Sink/Utils.h"
 
-#include "DD4hep/BitFieldCoder.h"
 #include "DD4hep/DD4hepUnits.h"
 #include "DD4hep/Detector.h"
+#include "DDSegmentation/BitFieldCoder.h"
 
-#include "TFile.h"
 #include "TMath.h"
 
 #include <fmt/format.h>
 #include <cmath>
-#include <random>
 
 DDPlanarDigi::DDPlanarDigi(const std::string& name, ISvcLocator* svcLoc)
     : MultiTransformer(name, svcLoc,
@@ -156,7 +153,7 @@ std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::MCRecoTrackerAssociation
     // Smear time of the hit and apply the time window cut if needed
     double hitT = hit.getTime();
 
-    if (m_resTLayer.size() and m_resTLayer[0] > 0) {
+    if (m_resTLayer.size() && m_resTLayer[0] > 0) {
       float resT = m_resTLayer.size() > 1 ? m_resTLayer[layer] : m_resTLayer[0];
 
       double tSmear = resT > 0 ? m_engine.Gaus(0, resT) : 0;
@@ -311,23 +308,4 @@ std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::MCRecoTrackerAssociation
   debug() << "Created " << nCreatedHits << " hits, " << nDismissedHits << " hits  dismissed" << endmsg;
 
   return std::make_tuple(std::move(trkhitVec), std::move(thsthcol));
-}
-
-StatusCode DDPlanarDigi::finalize() {
-  auto                     file  = TFile::Open(m_outputFileName.value().c_str(), "RECREATE");
-  std::vector<const char*> names = {"hu", "hv", "hT", "hitE", "hitsAccepted", "diffu", "diffv", "diffT", "hSize"};
-  auto                     it    = names.begin();
-  for (auto& h : m_histograms) {
-    std::string name = "";
-    // Name that will appear in the stats table
-    std::string    histName = *it;
-    nlohmann::json json     = *h;
-    auto [histo, dir] =
-        Gaudi::Histograming::Sink::jsonToRootHistogram<Gaudi::Histograming::Sink::Traits<false, TH1D, 1>>(
-            name, histName, json);
-    histo.Write(*it);
-    ++it;
-  }
-  file->Close();
-  return StatusCode::SUCCESS;
 }
