@@ -38,6 +38,16 @@
 #include <string>
 #include <vector>
 
+#include "GAUDI_VERSION.h"
+
+#if GAUDI_MAJOR_VERSION < 39
+namespace Gaudi::Accumulators {
+  template <unsigned int ND, atomicity Atomicity = atomicity::full, typename Arithmetic = double>
+  using StaticRootHistogram =
+      Gaudi::Accumulators::RootHistogramingCounterBase<ND, Atomicity, Arithmetic, naming::histogramString>;
+}
+#endif
+
 /** ======= DDPlanarDigi ========== <br>
  * Creates TrackerHits from SimTrackerHits, smearing them according to the input parameters.
  * The positions of "digitized" TrackerHits are obtained by gaussian smearing positions
@@ -118,9 +128,9 @@ private:
   Gaudi::Property<std::string> m_outputFileName{this, "OutputFileName", "planar_digi_histograms.root",
                                                 "Output file name for the histograms"};
 
-  const dd4hep::rec::SurfaceMap*                                            surfaceMap;
-  std::array<std::unique_ptr<Gaudi::Accumulators::RootHistogram<1>>, hSize> m_histograms;
-  std::string                                                               m_collName;
+  const dd4hep::rec::SurfaceMap*                                                  surfaceMap;
+  std::array<std::unique_ptr<Gaudi::Accumulators::StaticRootHistogram<1>>, hSize> m_histograms;
+  std::string                                                                     m_collName;
 
   inline static thread_local TRandom2 m_engine;
   SmartIF<IGeoSvc>                    m_geoSvc;
