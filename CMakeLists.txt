@@ -18,7 +18,7 @@ limitations under the License.
 ]]
 CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
 
-project(k4Reco)
+project(k4Reco LANGUAGES CXX)
 
 # please keep this layout for version setting, used by the automatic tagging script
 set(PACKAGE_VERSION_MAJOR 0)
