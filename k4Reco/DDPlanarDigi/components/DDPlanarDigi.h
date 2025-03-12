@@ -19,7 +19,6 @@
 #ifndef DDPLANARDIGI_H
 #define DDPLANARDIGI_H
 
-#include "Gaudi/Accumulators/RootHistogram.h"
 #include "Gaudi/Property.h"
 
 #include "edm4hep/EventHeaderCollection.h"
@@ -34,6 +33,7 @@
 #include "DDRec/SurfaceManager.h"
 
 #include "TRandom2.h"
+#include "TH1.h"
 
 #include <string>
 #include <vector>
@@ -126,7 +126,7 @@ private:
   Gaudi::Property<int> m_maxTries{this, "MaxTries", 10, "Maximum number of tries to find a valid surface for a hit"};
 
   const dd4hep::rec::SurfaceMap*                                                  surfaceMap;
-  std::array<std::unique_ptr<Gaudi::Accumulators::StaticRootHistogram<1>>, hSize> m_histograms;
+  std::array<TH1F*, hSize> m_histograms;
   std::string                                                                     m_collName;
 
   inline static thread_local TRandom2 m_engine;

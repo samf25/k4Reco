@@ -22,7 +22,7 @@
 #include "edm4hep/SimTrackerHit.h"
 #include "edm4hep/TrackerHitPlaneCollection.h"
 
-#include "Gaudi/Accumulators/RootHistogram.h"
+#include <GaudiKernel/ITHistSvc.h>
 
 #include "DD4hep/DD4hepUnits.h"
 #include "DD4hep/Detector.h"
@@ -52,20 +52,6 @@ DDPlanarDigi::DDPlanarDigi(const std::string& name, ISvcLocator* svcLoc)
 
     throw std::runtime_error("DDPlanarDigi: Inconsistent number of resolutions given for U and V coordinate");
   }
-
-  m_histograms[hu].reset(new Gaudi::Accumulators::StaticRootHistogram<1>{this, "hu", "smearing u", {50, -5., +5.}});
-  m_histograms[hv].reset(new Gaudi::Accumulators::StaticRootHistogram<1>{this, "hv", "smearing v", {50, -5., +5.}});
-  m_histograms[hT].reset(new Gaudi::Accumulators::StaticRootHistogram<1>{this, "hT", "smearing time", {50, -5., +5.}});
-
-  m_histograms[diffu].reset(new Gaudi::Accumulators::StaticRootHistogram<1>{this, "diffu", "diff u", {1000, -.1, +.1}});
-  m_histograms[diffv].reset(new Gaudi::Accumulators::StaticRootHistogram<1>{this, "diffv", "diff v", {1000, -.1, +.1}});
-  m_histograms[diffT].reset(
-      new Gaudi::Accumulators::StaticRootHistogram<1>{this, "diffT", "diff time", {1000, -5., +5.}});
-
-  m_histograms[hitE].reset(
-      new Gaudi::Accumulators::StaticRootHistogram<1>{this, "hitE", "hitEnergy in keV", {1000, 0, 200}});
-  m_histograms[hitsAccepted].reset(new Gaudi::Accumulators::StaticRootHistogram<1>{
-      this, "hitsAccepted", "Fraction of accepted hits [%]", {201, 0, 100.5}});
 }
 
 StatusCode DDPlanarDigi::initialize() {
@@ -87,6 +73,28 @@ StatusCode DDPlanarDigi::initialize() {
 
   // Get and store the name for a debug message later
   (void)this->getProperty("SimTrackerHitCollectionName", m_collName);
+
+  SmartIF<ITHistSvc> histSvc;
+	histSvc = serviceLocator()->service("THistSvc");
+
+  m_histograms[hu] = new TH1F("hu", "smearing u", 50, -5., +5.);
+  histSvc->regHist("/histos/digi/hu", m_histograms[hu]).ignore();
+  m_histograms[hv] = new TH1F("hv", "smearing v", 50, -5., +5.);
+  histSvc->regHist("/histos/digi/hv", m_histograms[hv]).ignore();
+  m_histograms[hT] = new TH1F("hT", "smearing time", 50, -5., +5.);
+  histSvc->regHist("/histos/digi/hT", m_histograms[hT]).ignore();
+
+  m_histograms[diffu] = new TH1F("diffu", "diff u", 1000, -.1, +.1);
+  histSvc->regHist("/histos/digi/diffu", m_histograms[diffu]).ignore();
+  m_histograms[diffv] = new TH1F("diffv", "diff v", 1000, -.1, +.1);
+  histSvc->regHist("/histos/digi/diffv", m_histograms[diffv]).ignore();
+  m_histograms[diffT] = new TH1F("diffT", "diff time", 1000, -5., +5.);
+  histSvc->regHist("/histos/digi/diffT", m_histograms[diffT]).ignore();
+
+  m_histograms[hitE] = new TH1F("hitE", "hitEnergy in keV", 1000, 0, 200);
+  histSvc->regHist("/histos/digi/hitE", m_histograms[hitE]).ignore();
+  m_histograms[hitsAccepted] = new TH1F("hitsAccepted", "Fraction of accepted hits [%]", 201, 0, 100.5);
+  histSvc->regHist("/histos/digi/hitsAccepted", m_histograms[hitsAccepted]).ignore();
 
   return StatusCode::SUCCESS;
 }
@@ -111,7 +119,7 @@ std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitSimTrackerHitL
   debug() << "Processing collection " << m_collName << " with " << simTrackerHits.size() << " hits ... " << endmsg;
 
   for (const auto& hit : simTrackerHits) {
-    ++(*m_histograms[hitE])[hit.getEDep() * (dd4hep::GeV / dd4hep::keV)];
+    m_histograms[hitE]->Fill(hit.getEDep() * (dd4hep::GeV / dd4hep::keV));
 
     if (hit.getEDep() < m_minEnergy) {
       debug() << "Hit with insufficient energy " << hit.getEDep() * (dd4hep::GeV / dd4hep::keV) << " keV" << endmsg;
@@ -163,8 +171,8 @@ std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitSimTrackerHitL
       float resT = m_resTLayer.size() > 1 ? m_resTLayer[layer] : m_resTLayer[0];
 
       double tSmear = resT > 0 ? m_engine.Gaus(0, resT) : 0;
-      ++(*m_histograms[hT])[resT > 0 ? tSmear / resT : 0];
-      ++(*m_histograms[diffT])[tSmear];
+      m_histograms[hT]->Fill(resT > 0 ? tSmear / resT : 0);
+      m_histograms[diffT]->Fill(tSmear);
 
       hitT += tSmear;
       debug() << "smeared hit at T: " << hit.getTime() << " ns to T: " << hitT
@@ -242,11 +250,11 @@ std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitSimTrackerHitL
         acceptHit = true;
         newPos    = newPosTmp;
 
-        ++(*m_histograms[hu])[uSmear / resU];
-        ++(*m_histograms[hv])[vSmear / resV];
+        m_histograms[hu]->Fill(uSmear / resU);
+        m_histograms[hv]->Fill(vSmear / resV);
 
-        ++(*m_histograms[diffu])[uSmear];
-        ++(*m_histograms[diffv])[vSmear];
+        m_histograms[diffu]->Fill(uSmear);
+        m_histograms[diffv]->Fill(vSmear);
 
         break;
       }
@@ -309,7 +317,7 @@ std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitSimTrackerHitL
 
   // Filling the fraction of accepted hits in the event
   float accFraction = nSimHits > 0 ? float(nCreatedHits) / float(nSimHits) * 100.0 : 0.0;
-  ++(*m_histograms[hitsAccepted])[accFraction];
+  m_histograms[hitsAccepted]->Fill(accFraction);
 
   debug() << "Created " << nCreatedHits << " hits, " << nDismissedHits << " hits  dismissed" << endmsg;
 
