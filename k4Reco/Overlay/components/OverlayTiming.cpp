@@ -35,6 +35,29 @@
 #include <random>
 #include <utility>
 #include <vector>
+#include <filesystem>
+namespace fs = std::filesystem;
+
+std::vector<std::string> filesInFolder(const std::string &folderPath)
+{
+  std::vector<std::string> files;
+  try
+  {
+    for (const auto &entry : fs::directory_iterator(folderPath))
+    {
+      if (fs::is_regular_file(entry.path()))
+      {
+        files.push_back(entry.path().string());
+      }
+    }
+  }
+  catch (const std::exception &ex)
+  {
+    std::cerr << "Error: " << ex.what() << std::endl;
+  }
+  return files;
+}
+
 
 template <typename T> inline float time_of_flight(const T& pos) {
   // Returns the time of flight to the radius in ns
@@ -58,14 +81,15 @@ StatusCode OverlayTiming::initialize() {
   }
 
   std::vector<std::vector<std::string>> inputFiles;
-  inputFiles = m_inputFileNames.value();
-  // if (m_startWithBackgroundFile >= 0) {
-  //   inputFiles = std::vector<std::string>(m_inputFileNames.begin() + m_startWithBackgroundFile, m_inputFileNames.end());
-  // } else {
-  //   inputFiles = m_inputFileNames;
-  // }
-  // TODO:: shuffle input files
-  // std::shuffle(inputFiles.begin(), inputFiles.end(), m_engine);
+  if (m_inputFileNames.value()[0][0].find("root") != std::string::npos) {
+    inputFiles = m_inputFileNames.value();
+  } else {
+    for (auto group : m_inputFileNames.value()) {
+      for (auto directory : group) {
+        inputFiles.push_back(filesInFolder(directory));
+      }
+    }
+  }
 
   m_bkgEvents = make_unique<EventHolder>(inputFiles);
   for (auto& val : m_bkgEvents->m_totalNumberOfEvents) {
@@ -251,39 +275,41 @@ retType OverlayTiming::operator()(const edm4hep::EventHeaderCollection&         
         std::map<int, int>                                           oldToNewMap;
         std::map<int, std::pair<std::vector<int>, std::vector<int>>> parentDaughterMap;
 
-        const auto& bgParticles = backgroundEvent.get<edm4hep::MCParticleCollection>(m_MCParticleCollectionName);
-        int         j           = oparticles.size();
-        for (size_t i = 0; i < bgParticles.size(); ++i) {
-          auto npart = bgParticles[i].clone(false);
+        if (m_mergeMCParticles) {
+          const auto& bgParticles = backgroundEvent.get<edm4hep::MCParticleCollection>(m_MCParticleCollectionName);
+          int         j           = oparticles.size();
+          for (size_t i = 0; i < bgParticles.size(); ++i) {
+            auto npart = bgParticles[i].clone(false);
 
-          npart.setTime(bgParticles[i].getTime() + timeOffset);
-          npart.setOverlay(true);
-          oparticles->push_back(npart);
-          for (const auto& parent : bgParticles[i].getParents()) {
-            parentDaughterMap[j].first.push_back(parent.getObjectID().index);
-          }
-          for (const auto& daughter : bgParticles[i].getDaughters()) {
-            parentDaughterMap[j].second.push_back(daughter.getObjectID().index);
-          }
-          oldToNewMap[i] = j;
-          j++;
-        }
-        for (const auto& [index, parentsDaughters] : parentDaughterMap) {
-          const auto& [parents, daughters] = parentsDaughters;
-          for (const auto& parent : parents) {
-            if (parentDaughterMap.find(oldToNewMap[parent]) == parentDaughterMap.end()) {
-              // warning() << "Parent " << parent << " not found in background event" << endmsg;
-              continue;
+            npart.setTime(bgParticles[i].getTime() + timeOffset);
+            npart.setOverlay(true);
+            oparticles->push_back(npart);
+            for (const auto& parent : bgParticles[i].getParents()) {
+              parentDaughterMap[j].first.push_back(parent.getObjectID().index);
             }
-            oparticles[index].addToParents(oparticles[oldToNewMap[parent]]);
-          }
-          for (const auto& daughter : daughters) {
-            if (parentDaughterMap.find(oldToNewMap[daughter]) == parentDaughterMap.end()) {
-              // warning() << "Parent " << daughter << " not found in background event" << endmsg;
-              continue;
+            for (const auto& daughter : bgParticles[i].getDaughters()) {
+              parentDaughterMap[j].second.push_back(daughter.getObjectID().index);
             }
-            // info() << "Adding (daughter) " << daughter << " to " << index << endmsg;
-            oparticles[index].addToDaughters(oparticles[oldToNewMap[daughter]]);
+            oldToNewMap[i] = j;
+            j++;
+          }
+          for (const auto& [index, parentsDaughters] : parentDaughterMap) {
+            const auto& [parents, daughters] = parentsDaughters;
+            for (const auto& parent : parents) {
+              if (parentDaughterMap.find(oldToNewMap[parent]) == parentDaughterMap.end()) {
+                // warning() << "Parent " << parent << " not found in background event" << endmsg;
+                continue;
+              }
+              oparticles[index].addToParents(oparticles[oldToNewMap[parent]]);
+            }
+            for (const auto& daughter : daughters) {
+              if (parentDaughterMap.find(oldToNewMap[daughter]) == parentDaughterMap.end()) {
+                // warning() << "Parent " << daughter << " not found in background event" << endmsg;
+                continue;
+              }
+              // info() << "Adding (daughter) " << daughter << " to " << index << endmsg;
+              oparticles[index].addToDaughters(oparticles[oldToNewMap[daughter]]);
+            }
           }
         }
 
@@ -310,7 +336,16 @@ retType OverlayTiming::operator()(const edm4hep::EventHeaderCollection&         
             auto nhit = simTrackerHit.clone(false);
             nhit.setOverlay(true);
             nhit.setTime(simTrackerHit.getTime() + timeOffset);
-            nhit.setParticle(oparticles[oldToNewMap[simTrackerHit.getParticle().getObjectID().index]]);
+            if (m_mergeMCParticles) {
+              nhit.setParticle(oparticles[oldToNewMap[simTrackerHit.getParticle().getObjectID().index]]);
+            } else {
+              edm4hep::MCParticle mcp = simTrackerHit.getParticle();
+              if (mcp.isAvailable()) {
+                // Preserve Momentum
+                edm4hep::Vector3d mom = mcp.getMomentum();
+                nhit.setMomentum({(float)mom.x, (float)mom.y, (float)mom.z}); 
+              }
+            }
             ocoll->push_back(nhit);
           }
         }

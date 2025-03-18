@@ -78,23 +78,23 @@ StatusCode DDPlanarDigi::initialize() {
 	histSvc = serviceLocator()->service("THistSvc");
 
   m_histograms[hu] = new TH1F("hu", "smearing u", 50, -5., +5.);
-  histSvc->regHist("/histos/digi/hu", m_histograms[hu]).ignore();
+  histSvc->regHist("/histos/" + m_collName + "/hu", m_histograms[hu]).ignore();
   m_histograms[hv] = new TH1F("hv", "smearing v", 50, -5., +5.);
-  histSvc->regHist("/histos/digi/hv", m_histograms[hv]).ignore();
+  histSvc->regHist("/histos/" + m_collName + "/hv", m_histograms[hv]).ignore();
   m_histograms[hT] = new TH1F("hT", "smearing time", 50, -5., +5.);
-  histSvc->regHist("/histos/digi/hT", m_histograms[hT]).ignore();
+  histSvc->regHist("/histos/" + m_collName + "/hT", m_histograms[hT]).ignore();
 
   m_histograms[diffu] = new TH1F("diffu", "diff u", 1000, -.1, +.1);
-  histSvc->regHist("/histos/digi/diffu", m_histograms[diffu]).ignore();
+  histSvc->regHist("/histos/" + m_collName + "/diffu", m_histograms[diffu]).ignore();
   m_histograms[diffv] = new TH1F("diffv", "diff v", 1000, -.1, +.1);
-  histSvc->regHist("/histos/digi/diffv", m_histograms[diffv]).ignore();
+  histSvc->regHist("/histos/" + m_collName + "/diffv", m_histograms[diffv]).ignore();
   m_histograms[diffT] = new TH1F("diffT", "diff time", 1000, -5., +5.);
-  histSvc->regHist("/histos/digi/diffT", m_histograms[diffT]).ignore();
+  histSvc->regHist("/histos/" + m_collName + "/diffT", m_histograms[diffT]).ignore();
 
   m_histograms[hitE] = new TH1F("hitE", "hitEnergy in keV", 1000, 0, 200);
-  histSvc->regHist("/histos/digi/hitE", m_histograms[hitE]).ignore();
+  histSvc->regHist("/histos/" + m_collName + "/hitE", m_histograms[hitE]).ignore();
   m_histograms[hitsAccepted] = new TH1F("hitsAccepted", "Fraction of accepted hits [%]", 201, 0, 100.5);
-  histSvc->regHist("/histos/digi/hitsAccepted", m_histograms[hitsAccepted]).ignore();
+  histSvc->regHist("/histos/" + m_collName + "/hitsAccepted", m_histograms[hitsAccepted]).ignore();
 
   return StatusCode::SUCCESS;
 }

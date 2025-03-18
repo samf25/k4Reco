@@ -111,42 +111,30 @@ private:
   constexpr static int SIMTRACKERHIT_INDEX_POSITION = 2;
   constexpr static int SIMCALOHIT_INDEX_POSITION    = 3;
 
-  Gaudi::Property<bool>        m_randomBX{this, "RandomBx", false,
-                                   "Place the physics event at an random position in the train: overrides PhysicsBX"};
+  Gaudi::Property<bool>        m_randomBX{this, "RandomBx", false, "Place the physics event at an random position in the train: overrides PhysicsBX"};
   mutable Gaudi::Property<int> m_physBX{this, "PhysicsBX", 1, "Number of the Bunch crossing of the physics event"};
   Gaudi::Property<int>         m_NBunchTrain{this, "NBunchtrain", 1, "Number of bunches in a bunch train"};
   // Gaudi::Property<int>         m_startWithBackgroundFile{this, "StartBackgroundFileIndex", -1,
   //                                                "Which background file to startWith"};
-  Gaudi::Property<int> m_startWithBackgroundEvent{this, "StartBackgroundEventIndex", -1,
-                                                  "Which background event to startWith"};
+  Gaudi::Property<int> m_startWithBackgroundEvent{this, "StartBackgroundEventIndex", -1, "Which background event to startWith"};
 
-  Gaudi::Property<std::vector<std::vector<std::string>>> m_inputFileNames{
-      this, "BackgroundFileNames", {}, "Name of the edm4hep input file(s) with background."};
+  Gaudi::Property<std::vector<std::vector<std::string>>> m_inputFileNames{this, "BackgroundFileNames", {}, "Name of the edm4hep input file(s) with background."};
 
-  Gaudi::Property<std::vector<double>> m_Noverlay{
-      this, "NumberBackground", {}, "Number of Background events to overlay - either fixed or Poisson mean"};
+  Gaudi::Property<std::vector<double>> m_Noverlay{this, "NumberBackground", {}, "Number of Background events to overlay - either fixed or Poisson mean"};
 
-  Gaudi::Property<std::vector<bool>> m_Poisson{
-      this,
-      "Poisson_random_NOverlay",
-      {},
-      "Draw random number of Events to overlay from Poisson distribution with mean value NumberBackground"};
+  Gaudi::Property<std::vector<bool>> m_Poisson{this, "Poisson_random_NOverlay", {}, "Draw random number of Events to overlay from Poisson distribution with mean value NumberBackground"};
 
-  Gaudi::Property<std::string> m_MCParticleCollectionName{
-      this, "BackgroundMCParticleCollectionName", "MCParticle",
-      "The name of the MCParticle collection in the background files"};
+  Gaudi::Property<std::string> m_MCParticleCollectionName{this, "BackgroundMCParticleCollectionName", "MCParticle", "The name of the MCParticle collection in the background files"};
 
   Gaudi::Property<float> m_deltaT{this, "Delta_t", float(0.5), "Time difference between BXs in the BXtrain"};
 
   mutable std::unique_ptr<EventHolder> m_bkgEvents{};
 
-  Gaudi::Property<std::map<std::string, std::vector<float>>> m_timeWindows{
-      this, "TimeWindows", std::map<std::string, std::vector<float>>(), "Time windows for the different collections"};
-  Gaudi::Property<bool> m_allowReusingBackgroundFiles{
-      this, "AllowReusingBackgroundFiles", false, "If true the same background file can be used for the same event"};
-  Gaudi::Property<bool> m_copyCellIDMetadata{this, "CopyCellIDMetadata", false,
-                                             "If metadata is found in the signal file, copy it to the output file, "
-                                             "replacing the old names with the new names"};
+  Gaudi::Property<std::map<std::string, std::vector<float>>> m_timeWindows{this, "TimeWindows", std::map<std::string, std::vector<float>>(), "Time windows for the different collections"};
+  Gaudi::Property<bool> m_allowReusingBackgroundFiles{this, "AllowReusingBackgroundFiles", false, "If true the same background file can be used for the same event"};
+  Gaudi::Property<bool> m_copyCellIDMetadata{this, "CopyCellIDMetadata", false, "If metadata is found in the signal file, copy it to the output file, replacing the old names with the new names"};
+
+  Gaudi::Property<bool> m_mergeMCParticles{this, "MergeMCParticles", true, "Merge the MC Particle collections"};
 
   // Gaudi::Property<int> m_maxCachedFrames{
   //   this, "MaxCachedFrames", 0, "Maximum number of frames cached from background files"};
