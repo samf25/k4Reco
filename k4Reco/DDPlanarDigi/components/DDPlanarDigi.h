@@ -42,9 +42,9 @@
 
 #if GAUDI_MAJOR_VERSION < 39
 namespace Gaudi::Accumulators {
-  template <unsigned int ND, atomicity Atomicity = atomicity::full, typename Arithmetic = double>
-  using StaticRootHistogram =
-      Gaudi::Accumulators::RootHistogramingCounterBase<ND, Atomicity, Arithmetic, naming::histogramString>;
+template <unsigned int ND, atomicity Atomicity = atomicity::full, typename Arithmetic = double>
+using StaticRootHistogram =
+    Gaudi::Accumulators::RootHistogramingCounterBase<ND, Atomicity, Arithmetic, naming::histogramString>;
 }
 #endif
 
@@ -88,13 +88,13 @@ struct DDPlanarDigi final
 
   StatusCode initialize() override;
 
-  std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitSimTrackerHitLinkCollection> operator()(
-      const edm4hep::SimTrackerHitCollection& simTrackerHits,
-      const edm4hep::EventHeaderCollection&   headers) const override;
+  std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitSimTrackerHitLinkCollection>
+  operator()(const edm4hep::SimTrackerHitCollection& simTrackerHits,
+             const edm4hep::EventHeaderCollection& headers) const override;
 
 private:
-  Gaudi::Property<std::string>        m_subDetName{this, "SubDetectorName", "VXD", "Name of the subdetector"};
-  Gaudi::Property<bool>               m_isStrip{this, "IsStrip", false, "Whether the hits are 1D strip hits"};
+  Gaudi::Property<std::string> m_subDetName{this, "SubDetectorName", "VXD", "Name of the subdetector"};
+  Gaudi::Property<bool> m_isStrip{this, "IsStrip", false, "Whether the hits are 1D strip hits"};
   Gaudi::Property<std::vector<float>> m_resULayer{
       this, "ResolutionU", {0.004}, "Resolution in the direction of u; either one per layer or one for all layers"};
   Gaudi::Property<std::vector<float>> m_resVLayer{
@@ -105,7 +105,7 @@ private:
       {-1},
       "Resolution in the direction of t; either one per layer or one for all layers. If the single entry is negative, "
       "disable time smearing. "};
-  Gaudi::Property<bool>   m_forceHitsOntoSurface{this, "ForceHitsOntoSurface", false,
+  Gaudi::Property<bool> m_forceHitsOntoSurface{this, "ForceHitsOntoSurface", false,
                                                "Project hits onto the surfoce in case they are not yet on the surface"};
   Gaudi::Property<double> m_minEnergy{this, "MinEnergy", 0.0, "Minimum energy (GeV) of SimTrackerHit to be digitized"};
 
@@ -123,15 +123,15 @@ private:
       this, "EncodingStringParameterName", "GlobalTrackerReadoutID",
       "The name of the DD4hep constant that contains the Encoding string for tracking detectors"};
   Gaudi::Property<std::string> m_geoSvcName{this, "GeoSvcName", "GeoSvc", "The name of the GeoSvc instance"};
-  Gaudi::Property<int>    m_maxTries{this, "MaxTries", 10, "Maximum number of tries to find a valid surface for a hit"};
+  Gaudi::Property<int> m_maxTries{this, "MaxTries", 10, "Maximum number of tries to find a valid surface for a hit"};
   Gaudi::Property<size_t> m_cellIDBits{this, "CellIDBits", 64, "Number of bits to use for the cellID of the hits"};
-  const dd4hep::rec::SurfaceMap*                                                  surfaceMap;
+  const dd4hep::rec::SurfaceMap* surfaceMap;
   std::array<std::unique_ptr<Gaudi::Accumulators::StaticRootHistogram<1>>, hSize> m_histograms;
-  std::string                                                                     m_collName;
+  std::string m_collName;
 
   inline static thread_local TRandom2 m_engine;
-  SmartIF<IGeoSvc>                    m_geoSvc;
-  SmartIF<IUniqueIDGenSvc>            m_uidSvc;
+  SmartIF<IGeoSvc> m_geoSvc;
+  SmartIF<IUniqueIDGenSvc> m_uidSvc;
 
   std::uint64_t m_mask{static_cast<std::uint64_t>(-1)};
 };

@@ -30,8 +30,8 @@
 
 #include "TMath.h"
 
-#include <fmt/format.h>
 #include <cmath>
+#include <fmt/format.h>
 
 DDPlanarDigi::DDPlanarDigi(const std::string& name, ISvcLocator* svcLoc)
     : MultiTransformer(name, svcLoc,
@@ -77,9 +77,9 @@ StatusCode DDPlanarDigi::initialize() {
 
   const auto detector = m_geoSvc->getDetector();
 
-  const auto         surfMan = detector->extension<dd4hep::rec::SurfaceManager>();
-  dd4hep::DetElement det     = detector->detector(m_subDetName.value());
-  surfaceMap                 = surfMan->map(m_subDetName.value());
+  const auto surfMan = detector->extension<dd4hep::rec::SurfaceManager>();
+  dd4hep::DetElement det = detector->detector(m_subDetName.value());
+  surfaceMap = surfMan->map(m_subDetName.value());
 
   if (!surfaceMap) {
     throw std::runtime_error(fmt::format("Could not find surface map for detector: {} in SurfaceManager", det.name()));
@@ -95,18 +95,19 @@ StatusCode DDPlanarDigi::initialize() {
   return StatusCode::SUCCESS;
 }
 
-std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitSimTrackerHitLinkCollection> DDPlanarDigi::operator()(
-    const edm4hep::SimTrackerHitCollection& simTrackerHits, const edm4hep::EventHeaderCollection& headers) const {
+std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitSimTrackerHitLinkCollection>
+DDPlanarDigi::operator()(const edm4hep::SimTrackerHitCollection& simTrackerHits,
+                         const edm4hep::EventHeaderCollection& headers) const {
   auto seed = m_uidSvc->getUniqueID(headers[0].getEventNumber(), headers[0].getRunNumber(), this->name());
   debug() << "Using seed " << seed << " for event " << headers[0].getEventNumber() << " and run "
           << headers[0].getRunNumber() << endmsg;
   m_engine.SetSeed(seed);
 
-  int nCreatedHits   = 0;
+  int nCreatedHits = 0;
   int nDismissedHits = 0;
 
   auto trkhitVec = edm4hep::TrackerHitPlaneCollection();
-  auto thsthcol  = edm4hep::TrackerHitSimTrackerHitLinkCollection();
+  auto thsthcol = edm4hep::TrackerHitSimTrackerHitLinkCollection();
 
   std::string cellIDEncodingString = m_geoSvc->constantAsString(m_encodingStringVariable.value());
   dd4hep::DDSegmentation::BitFieldCoder bitFieldCoder(cellIDEncodingString);
@@ -131,8 +132,8 @@ std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitSimTrackerHitL
       throw std::runtime_error(fmt::format("DDPlanarDigi::processEvent(): no surface found for cellID : {}", cellID));
     }
 
-    const dd4hep::rec::ISurface* surf  = sI->second;
-    int                          layer = bitFieldCoder.get(cellID, "layer");
+    const dd4hep::rec::ISurface* surf = sI->second;
+    int layer = bitFieldCoder.get(cellID, "layer");
 
     dd4hep::rec::Vector3D oldPos(hit.getPosition()[0], hit.getPosition()[1], hit.getPosition()[2]);
     dd4hep::rec::Vector3D newPos;
@@ -147,7 +148,7 @@ std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitSimTrackerHitL
       //         << endmsg;
 
       if (m_forceHitsOntoSurface) {
-        dd4hep::rec::Vector2D lv           = surf->globalToLocal(dd4hep::mm * oldPos);
+        dd4hep::rec::Vector2D lv = surf->globalToLocal(dd4hep::mm * oldPos);
         dd4hep::rec::Vector3D oldPosOnSurf = (1. / dd4hep::mm) * surf->localToGlobal(lv);
 
         debug() << " moved to " << oldPosOnSurf << " distance " << (oldPosOnSurf - oldPos).r() << endmsg;
@@ -202,18 +203,19 @@ std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitSimTrackerHitL
 
     // Get local coordinates on surface
     dd4hep::rec::Vector2D lv = surf->globalToLocal(dd4hep::mm * oldPos);
-    double                uL = lv[0] / dd4hep::mm;
-    double                vL = lv[1] / dd4hep::mm;
+    double uL = lv[0] / dd4hep::mm;
+    double vL = lv[1] / dd4hep::mm;
 
     bool acceptHit = false;
-    int  tries     = 0;
+    int tries = 0;
 
     // TODO: check lengths
     float resU = m_resULayer.size() > 1 ? m_resULayer[layer] : m_resULayer[0];
     float resV = m_resVLayer.size() > 1 ? m_resVLayer[layer] : m_resVLayer[0];
 
     while (tries < m_maxTries) {
-      // if( tries > 0 ) debug() << "retry smearing for " <<  cellid_decoder( hit ).valueString() << " : retries " << tries << endmsg;
+      // if( tries > 0 ) debug() << "retry smearing for " <<  cellid_decoder( hit ).valueString() << " : retries " <<
+      // tries << endmsg;
 
       double uSmear = m_engine.Gaus(0, resU);
       double vSmear = m_engine.Gaus(0, resV);
@@ -222,14 +224,14 @@ std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitSimTrackerHitL
       if (m_isStrip) {
         if (m_subDetName == "SET") {
           double xStripPos, yStripPos, zStripPos;
-          //Find intersection of the strip with the z=centerOfSensor plane to set it as the center of the SET strip
+          // Find intersection of the strip with the z=centerOfSensor plane to set it as the center of the SET strip
           dd4hep::rec::Vector3D simHitPosSmeared =
               (1. / dd4hep::mm) * (surf->localToGlobal(dd4hep::rec::Vector2D((uL + uSmear) * dd4hep::mm, 0.)));
-          zStripPos        = surf->origin()[2] / dd4hep::mm;
+          zStripPos = surf->origin()[2] / dd4hep::mm;
           double lineParam = (zStripPos - simHitPosSmeared[2]) / v[2];
-          xStripPos        = simHitPosSmeared[0] + lineParam * v[0];
-          yStripPos        = simHitPosSmeared[1] + lineParam * v[1];
-          newPosTmp        = dd4hep::rec::Vector3D(xStripPos, yStripPos, zStripPos);
+          xStripPos = simHitPosSmeared[0] + lineParam * v[0];
+          yStripPos = simHitPosSmeared[1] + lineParam * v[1];
+          newPosTmp = dd4hep::rec::Vector3D(xStripPos, yStripPos, zStripPos);
         } else {
           newPosTmp = (1. / dd4hep::mm) * (surf->localToGlobal(dd4hep::rec::Vector2D((uL + uSmear) * dd4hep::mm, 0.)));
         }
@@ -244,7 +246,7 @@ std::tuple<edm4hep::TrackerHitPlaneCollection, edm4hep::TrackerHitSimTrackerHitL
 
       if (surf->insideBounds(dd4hep::mm * newPosTmp)) {
         acceptHit = true;
-        newPos    = newPosTmp;
+        newPos = newPosTmp;
 
         ++(*m_histograms[hu])[uSmear / resU];
         ++(*m_histograms[hv])[vSmear / resV];
