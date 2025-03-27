@@ -38,7 +38,7 @@ digi.SubDetectorName = "Vertex"
 digi.IsStrip = False
 digi.ResolutionU = [0.003, 0.003, 0.003, 0.003, 0.003, 0.003]
 digi.ResolutionV = [0.003, 0.003, 0.003, 0.003, 0.003, 0.003]
-digi.SimTrackerHitCollectionName = ["VertexBarrelCollection"]
+digi.SimTrackHitCollectionName = ["VertexBarrelCollection"]
 digi.SimTrkHitRelCollection = ["VXDTrackerHitRelations"]
 digi.TrackerHitCollectionName = ["VXDTrackerHits"]
 
