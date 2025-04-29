@@ -16,7 +16,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ]]
-CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
+cmake_minimum_required(VERSION 3.23)
 
 project(k4Reco LANGUAGES CXX)
 
@@ -27,8 +27,12 @@ set(PACKAGE_VERSION_PATCH 0)
 
 set(PACKAGE_VERSION "${PACKAGE_VERSION_MAJOR}.${PACKAGE_VERSION_MINOR}.${PACKAGE_VERSION_PATCH}")
 
-find_package(DD4hep REQUIRED)
+option(BUILD_TRACKING "Build conformal tracking" ON)
+
+
+find_package(podio 1.2.99 REQUIRED)
 find_package(EDM4HEP REQUIRED)
+find_package(DD4hep REQUIRED)
 find_package(Gaudi REQUIRED)
 find_package(k4FWCore REQUIRED)
 find_package(ROOT REQUIRED COMPONENTS RIO Tree)
@@ -37,9 +41,13 @@ find_package(k4SimGeant4 REQUIRED)
 include(cmake/Key4hepConfig.cmake)
 
 include(GNUInstallDirs)
-include(CTest)
 
 add_subdirectory(k4Reco)
-add_subdirectory(test)
+include(CTest)
+if(BUILD_TESTING)
+  add_subdirectory(test)
+endif()
+
+add_subdirectory(python)
 
 # include(cmake/CreateProjectConfig.cmake)
