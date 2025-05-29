@@ -1,3 +1,60 @@
+# v00.02.00
+
+* 2025-05-28 jmcarcell ([PR#32](https://github.com/key4hep/k4Reco/pull/32))
+  - Use ubuntu-latest for running pre-commit
+
+* 2025-05-28 jmcarcell ([PR#31](https://github.com/key4hep/k4Reco/pull/31))
+  - Follow https://github.com/iLCSoft/ConformalTracking/pull/63 and fix an out of bounds erase and add an exception if trying to erase out of bounds
+
+* 2025-04-29 jmcarcell ([PR#23](https://github.com/key4hep/k4Reco/pull/23))
+  - Add ported processors that are used in tracking: `ConformalTracking`, `ClonesAndSplitTracksFinder`, `RefitFinal` and `TruthTrackFinder`
+  - Add ported tracking utilities and tools that are needed for the algorithms
+  - Add tests to run the new Gaudi algorithms and compare their output to the output obtained from the Marlin wrapper
+  - Add some README files with comments about the stuff that is ported, for example, which parts have not been ported.
+
+* 2025-03-27 jmcarcell ([PR#29](https://github.com/key4hep/k4Reco/pull/29))
+  - Rename SimTrackerHitCollectionName to SimTrackHitCollectionName in DDPlanarDigi, because this is the original input name
+
+* 2025-03-25 Mateusz Jakub Fila ([PR#28](https://github.com/key4hep/k4Reco/pull/28))
+  - Change PRNGs from `thread_local static` members to execution-local variables
+  - Remove `mutable` and don't mutate "PhysicsBX" property during execution
+
+* 2025-03-19 Mateusz Jakub Fila ([PR#26](https://github.com/key4hep/k4Reco/pull/26))
+  - Use the properties `Input` and `Output` with `IOSvc` instead of the deprecated `input` and `output`.
+
+* 2025-03-18 jmcarcell ([PR#25](https://github.com/key4hep/k4Reco/pull/25))
+  - DDPlanarDigi: Add the option "CellIDBits" to select only some number of bits in the Cell IDs. It can be used for detectors that have segmentation. Note that for this to work, the segmentation bits have to be at the end of the cell ID number, since only the first N bits will be used.
+
+* 2025-03-17 jmcarcell ([PR#24](https://github.com/key4hep/k4Reco/pull/24))
+  - Use auto std::uint64_t with cellIDs instead of converting to int in DDPlanarDigi
+
+* 2025-02-12 jmcarcell ([PR#20](https://github.com/key4hep/k4Reco/pull/20))
+  - Improve failing when retrieving GeoSvc in DDPlanarDigi
+
+* 2025-02-12 jmcarcell ([PR#19](https://github.com/key4hep/k4Reco/pull/19))
+  - Fix setting the time for tracker hits in Overlay
+
+* 2025-02-10 jmcarcell ([PR#18](https://github.com/key4hep/k4Reco/pull/18))
+  - Use the usual naming `m_<name>` instead of keeping the name they had in OverlayTiming. Makes it easier to read not to have the two mixed.
+
+* 2024-12-06 jmcarcell ([PR#16](https://github.com/key4hep/k4Reco/pull/16))
+  - Add const where possible and improve the names of temporary variables in the Overlay algorithm
+
+* 2024-12-06 jmcarcell ([PR#15](https://github.com/key4hep/k4Reco/pull/15))
+  - Set the time for SimTrackerHits and CaloHitContributions from background in the Overlay algorithm
+
+* 2024-11-20 Thomas Madlener ([PR#13](https://github.com/key4hep/k4Reco/pull/13))
+  - Make sure to find DD4hep first during CMake configuration to avoid running into issues with different python versions.
+
+* 2024-10-22 jmcarcell ([PR#12](https://github.com/key4hep/k4Reco/pull/12))
+  - Add an option to copy CellID metadata when overlaying, so that the new collections can be equivalent to the old ones.
+
+* 2024-10-15 jmcarcell ([PR#11](https://github.com/key4hep/k4Reco/pull/11))
+  - Move the check for the end of file before getting the next event, making it possible to run with a bacground file with the same number of events as the signal file (with the option of reusing disabled). Previously the check was happening one event too soon.
+
+* 2024-10-15 jmcarcell ([PR#10](https://github.com/key4hep/k4Reco/pull/10))
+  - Fix the steering file for Overlay Timing: Make sure to pass a string for the MCParticle name in the background file and not a list
+
 # v00-01-00
 
 * 2024-09-30 jmcarcell ([PR#9](https://github.com/key4hep/k4Reco/pull/9))
