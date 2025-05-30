@@ -1,3 +1,8 @@
+# v00.02.01
+
+* 2025-05-30 jmcarcell ([PR#33](https://github.com/key4hep/k4Reco/pull/33))
+  - Add compatibility with Gaudi before v39, that was missing in ConformalTracking because of StaticRootHistogram
+
 # v00.02.00
 
 * 2025-05-28 jmcarcell ([PR#32](https://github.com/key4hep/k4Reco/pull/32))
