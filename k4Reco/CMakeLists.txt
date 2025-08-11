@@ -25,6 +25,8 @@ set(sources
   CaloDigi/src/RealisticCaloDigiSilicon.cc
   CaloDigi/src/RealisticCaloRecoScinPpd.cc
   CaloDigi/src/RealisticCaloRecoSilicon.cc
+  CaloDigi/src/RealisticCaloDigi.cc
+  CaloDigi/src/RealisticCaloReco.cc
 )
 
 set(libs
@@ -38,6 +40,7 @@ set(libs
         ROOT::Core
         ROOT::MathCore
         ROOT::Tree
+        CLHEP::Random
 )
 
 if(BUILD_TRACKING)
@@ -111,7 +114,9 @@ set(k4RecoPlugins_public_includes
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-target_include_directories(k4RecoPlugins PUBLIC ${k4RecoPlugins_public_includes})
+target_include_directories(k4RecoPlugins PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/CaloDigi/include>
+  ${k4RecoPlugins_public_includes})
 
 if(BUILD_TRACKING)
   target_include_directories(k4RecoPlugins
