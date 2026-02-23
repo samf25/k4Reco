@@ -257,18 +257,11 @@ retType OverlayTimingRandomMix::operator()(
               << endmsg;
 
       for (int k = 0; k < NOverlay_to_this_BX; ++k) {
-        info() << "Overlaying background event " << m_bkgEvents->m_nextEntry[groupIndex][k] << " from group " << groupIndex
-               << " to BX " << bxInTrain << endmsg;
         if (m_bkgEvents->m_nextEntry[groupIndex][k] >= m_bkgEvents->m_totalNumberOfEvents[groupIndex][k] &&
             !m_allowReusingBackgroundFiles) {
           throw GaudiException("No more events in background file", name(), StatusCode::FAILURE);
         }
-        podio::Reader reader = m_bkgEvents->open(groupIndex, v_file_indices[k]);
-        debug() << "File: " << m_bkgEvents->m_fileNames[groupIndex][v_file_indices[k]] 
-                <<"\nNumber of Events: "<< reader.getEvents() << endmsg;
-        const auto backgroundEvent = reader.readEvent(m_bkgEvents->m_nextEntry[groupIndex][k]);
-        m_bkgEvents->m_nextEntry[groupIndex][k]++;
-        m_bkgEvents->m_nextEntry[groupIndex][k] %= m_bkgEvents->m_totalNumberOfEvents[groupIndex][k];
+        podio::Frame backgroundEvent = m_bkgEvents->open(groupIndex, v_file_indices[k]);
         const auto availableCollections = backgroundEvent.getAvailableCollections();
 
         // Either 0 or negative

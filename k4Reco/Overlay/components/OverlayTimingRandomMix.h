@@ -52,12 +52,14 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <mutex>
 
 namespace OverlayTimingRandomMixNS {
   struct EventHolder {
     std::vector<std::vector<std::string>>   m_fileNames;
     std::vector<std::vector<size_t>>        m_totalNumberOfEvents;
-    std::vector<std::vector<size_t>> m_nextEntry;
+    std::vector<std::vector<size_t>>        m_nextEntry;
+    std::mutex m_mutex;
 
     EventHolder(const std::vector<std::vector<std::string>>& fileNames) : m_fileNames(fileNames) {
       m_totalNumberOfEvents.resize(m_fileNames.size());
@@ -72,8 +74,13 @@ namespace OverlayTimingRandomMixNS {
     }
     EventHolder() = default;
 
-    podio::Reader open(int groupIndex, int index) {
-      return podio::makeReader(m_fileNames[groupIndex][index]);
+    podio::Frame open(int groupIndex, int index) {
+      std::lock_guard<std::mutex> lock(m_mutex);
+      podio::Reader reader = podio::makeReader(m_fileNames[groupIndex][index]);
+      podio::Frame frame = reader.readEvent(m_nextEntry[groupIndex][index]);
+      m_nextEntry[groupIndex][index]++;
+      m_nextEntry[groupIndex][index] %= m_totalNumberOfEvents[groupIndex][index];
+      return frame;
     }
 
     // TODO: Cache functionality
