@@ -49,6 +49,7 @@
 #include "Gaudi/Property.h"
 
 #include <map>
+#include <memory>
 #include <random>
 #include <string>
 #include <vector>
@@ -59,23 +60,26 @@ namespace OverlayTimingRandomMixNS {
     std::vector<std::vector<std::string>>   m_fileNames;
     std::vector<std::vector<size_t>>        m_totalNumberOfEvents;
     std::vector<std::vector<size_t>>        m_nextEntry;
-    std::mutex m_mutex;
+    std::vector<std::vector<std::unique_ptr<std::mutex>>> m_fileMutexes; // one lock per file
 
     EventHolder(const std::vector<std::vector<std::string>>& fileNames) : m_fileNames(fileNames) {
       m_totalNumberOfEvents.resize(m_fileNames.size());
       m_nextEntry.resize(m_fileNames.size());
+      m_fileMutexes.resize(m_fileNames.size());
 
       for (int group = 0; group < m_fileNames.size(); group++) {
         m_nextEntry[group].resize(m_fileNames[group].size());
+        m_fileMutexes[group].reserve(m_fileNames[group].size());
         for (auto& name : m_fileNames[group]) {
           m_totalNumberOfEvents[group].push_back(1);//m_rootFileReaders[group].back().getEntries("events"));
+          m_fileMutexes[group].emplace_back(std::make_unique<std::mutex>());
         }
       }
     }
     EventHolder() = default;
 
     podio::Frame open(int groupIndex, int index) {
-      std::lock_guard<std::mutex> lock(m_mutex);
+      std::lock_guard<std::mutex> lock(*m_fileMutexes[groupIndex][index]);
       podio::Reader reader = podio::makeReader(m_fileNames[groupIndex][index]);
       podio::Frame frame = reader.readEvent(m_nextEntry[groupIndex][index]);
       m_nextEntry[groupIndex][index]++;
